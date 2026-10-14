@@ -1,4 +1,4 @@
-name: Testes Docker
+name: Docker CI - WordPress e MySQL
 
 on:
   push:
@@ -11,7 +11,8 @@ permissions:
   contents: read
 
 jobs:
-  testes:
+  validacao_docker:
+    name: Validacao Docker
     runs-on: ubuntu-latest
 
     steps:
