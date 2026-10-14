@@ -35,7 +35,7 @@ jobs:
         run: |
           docker run -d --name container2 --network rede-teste alpine sleep 3600
 
-      - name: Testar comunicação entre containers
+      - name: Testar comunicacao entre containers
         run: |
           docker exec container1 sh -c "apk add --no-cache iputils"
           docker exec container1 ping -c 4 container2
@@ -55,6 +55,25 @@ jobs:
           done
           docker compose logs
           exit 1
+
+      - name: Preparar imagem Docker
+        run: |
+          docker tag wordpress:latest wilzinho/dockercomposetest:tagname
+
+      - name: Testar imagem Docker
+        run: |
+          docker run --rm wilzinho/dockercomposetest:tagname php -v
+
+      - name: Gerar artefato da imagem
+        run: |
+          docker save -o dockercomposetest.tar wilzinho/dockercomposetest:tagname
+
+      - name: Armazenar artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: dockercomposetest-image
+          path: dockercomposetest.tar
+          retention-days: 7
 
       - name: Verificar containers
         run: |
