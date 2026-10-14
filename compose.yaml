@@ -1,0 +1,27 @@
+services:
+  banco:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: senha_wp_123
+      MYSQL_ROOT_PASSWORD: senha_root_123
+    volumes:
+      - dados_mysql:/var/lib/mysql
+
+  wordpress:
+    image: wordpress:latest
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: banco:3306
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: senha_wp_123
+      WORDPRESS_DB_NAME: wordpress
+    depends_on:
+      - banco
+
+volumes:
+  dados_mysql:

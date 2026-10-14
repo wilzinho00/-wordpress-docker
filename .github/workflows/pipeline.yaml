@@ -1,0 +1,68 @@
+name: Testes Docker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o projeto
+        uses: actions/checkout@v4
+
+      - name: Verificar Docker
+        run: |
+          docker --version
+          docker compose version
+
+      - name: Criar rede de teste
+        run: docker network create rede-teste
+
+      - name: Criar container 1
+        run: |
+          docker run -d --name container1 --network rede-teste alpine sleep 3600
+
+      - name: Criar container 2
+        run: |
+          docker run -d --name container2 --network rede-teste alpine sleep 3600
+
+      - name: Testar comunicação entre containers
+        run: |
+          docker exec container1 sh -c "apk add --no-cache iputils"
+          docker exec container1 ping -c 4 container2
+
+      - name: Iniciar WordPress e MySQL
+        run: docker compose up -d
+
+      - name: Testar WordPress
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8080/ -o /dev/null; then
+              echo "WordPress respondeu com sucesso!"
+              exit 0
+            fi
+            echo "Aguardando o WordPress..."
+            sleep 2
+          done
+          docker compose logs
+          exit 1
+
+      - name: Verificar containers
+        run: |
+          docker ps
+          docker compose ps
+
+      - name: Limpar ambiente
+        if: always()
+        run: |
+          docker compose down || true
+          docker rm -f container1 container2 || true
+          docker network rm rede-teste || true
